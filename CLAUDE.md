@@ -24,10 +24,12 @@ ploomberg/
 │   ├── frankfurter.py       # Forex rates (EUR) — api.frankfurter.app, no key needed
 │   ├── coingecko.py         # Crypto (BTC) — api.coingecko.com, no key needed
 │   ├── metals.py            # Gold/Silver — via yfinance (GC=F, SI=F)
-│   └── yahoo.py             # Copper, Nickel, Zinc, Crude Oil, Nat Gas — via yfinance
+│   ├── yahoo.py             # Copper, Nickel, Zinc, Crude Oil, Nat Gas — via yfinance
+│   └── history.py           # Historical price data fetcher (yfinance, Frankfurter timeseries, CoinGecko market_chart)
 ├── screens/
 │   ├── dashboard_view.py    # F1 — main ticker dashboard
 │   ├── converter_view.py    # F2 — currency/commodity converter
+│   ├── chart_view.py        # F3 — historical price charts with interactive cursor
 │   ├── editor_view.py       # F5 — add/remove dashboard assets
 │   └── theme_view.py        # F7 — theme picker with live preview
 └── widgets/
@@ -36,6 +38,7 @@ ploomberg/
     ├── status_bar.py        # ISO clock │ data freshness │ countdown │ market indicators │ online dot
     ├── command_hints.py     # Bottom MC-style key hints (docked)
     ├── converter_form.py    # Amount/From/To inputs with live calculation
+    ├── price_chart.py       # PlotextPlot wrapper with cursor line support
     └── theme_preview.py     # Sample rows showing theme colors
 ```
 
@@ -79,16 +82,25 @@ ploomberg/
 |-----|--------|
 | F1 | Dashboard (default) |
 | F2 | Converter |
+| F3 | Chart |
 | F5 | Dashboard Editor |
 | F7 | Theme Editor |
 | Q | Quit |
 | Space/Enter | Toggle asset (in Editor) |
 | Enter | Apply theme (in Theme Editor) |
+| Left/Right | Move cursor across chart (in Chart) |
+| PgUp/PgDn | Jump cursor 10% (in Chart) |
+| Home/End | Cursor to start/end (in Chart) |
+| Esc | Clear cursor (in Chart) |
+| Up/Down | Cycle assets (in Chart) |
+| +/- | Change period (in Chart) |
+| 1-6 | Jump to period 1D/5D/1M/3M/6M/1Y (in Chart) |
 
 ## Dependencies
 - `textual>=0.47.0` (installed: 8.0.0)
 - `httpx>=0.25.0`
 - `yfinance>=0.2.0`
+- `textual-plotext>=1.0.0` (plotext charts in Textual)
 - Python 3.12
 
 ## Design Conventions
@@ -101,7 +113,7 @@ ploomberg/
 ## Roadmap
 - **Phase 1** (DONE): Dashboard ticker + Converter
 - **Phase 1.5** (DONE): Theme Editor with 5 built-in themes
-- **Phase 2** (TODO): Historical price charts (F3)
+- **Phase 2** (DONE): Historical price charts (F3) with interactive cursor + detail panel
 - **Phase 3** (TODO): Watchlists (F4)
 - **Phase 4** (TODO): Detail window — select an asset to view extended info (unit, exchange, provider, description, etc.)
 
@@ -113,3 +125,4 @@ ploomberg/
 5. `get_css_variables()` is called during `super().__init__()`, so any instance attributes it depends on must be set BEFORE the super call
 6. `_broadcast_prices()` must post to `self.screen` (the Screen object), not iterate `walk_children()` — the Screen has the `on_price_update` handler, child widgets do not
 7. yfinance is synchronous — wrap calls in `asyncio.to_thread()` to avoid blocking the event loop
+8. Metals config symbols (XAU, XAG) differ from yfinance tickers (GC=F, SI=F) — history fetcher must use `METAL_TICKERS` mapping, not raw config symbol

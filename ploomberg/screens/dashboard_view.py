@@ -108,7 +108,7 @@ class DashboardView(Screen):
         yield TiltOverlay()
         yield StatusBar()
         yield CommandHints(
-            "[bold]R[/] Refresh  [bold]F2[/] Convert  "
+            "[bold]R[/] Refresh  [bold]F2[/] Convert  [bold]F3[/] Chart  "
             "[bold]F5[/] Edit  [bold]F7[/] Theme  [bold]Q[/] Quit"
         )
 

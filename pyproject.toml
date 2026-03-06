@@ -7,6 +7,7 @@ dependencies = [
     "textual>=0.47.0",
     "httpx>=0.25.0",
     "yfinance>=0.2.0",
+    "textual-plotext>=1.0.0",
 ]
 
 [project.scripts]

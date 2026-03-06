@@ -22,6 +22,7 @@ from ploomberg.providers.metals import MetalsProvider
 from ploomberg.providers.yahoo import YahooProvider
 from ploomberg.screens.dashboard_view import DashboardView
 from ploomberg.screens.converter_view import ConverterView
+from ploomberg.screens.chart_view import ChartView
 from ploomberg.screens.editor_view import EditorView
 from ploomberg.screens.theme_view import ThemeView
 from ploomberg.themes import BUILTIN_THEMES, DEFAULT_THEME, Theme
@@ -33,6 +34,7 @@ class PloombergApp(App):
     MODES = {
         "dashboard": DashboardView,
         "converter": ConverterView,
+        "chart": ChartView,
         "editor": EditorView,
         "theme": ThemeView,
     }
@@ -42,6 +44,7 @@ class PloombergApp(App):
     BINDINGS = [
         Binding("f1", "switch_dashboard", "Dashboard", priority=True),
         Binding("f2", "switch_converter", "Converter", priority=True),
+        Binding("f3", "switch_chart", "Chart", priority=True),
         Binding("f5", "switch_editor", "Editor", priority=True),
         Binding("f7", "switch_theme", "Theme", priority=True),
         Binding("q", "quit", "Quit", priority=True),
@@ -200,6 +203,9 @@ class PloombergApp(App):
     def action_switch_converter(self) -> None:
         self.switch_mode("converter")
         self.call_later(self._broadcast_prices)
+
+    def action_switch_chart(self) -> None:
+        self.switch_mode("chart")
 
     def action_switch_editor(self) -> None:
         self.switch_mode("editor")
