@@ -17,7 +17,9 @@ ploomberg/
 ├── __main__.py              # Entry point (calls PloombergApp().run())
 ├── app.py                   # PloombergApp — main Textual App subclass
 ├── config.py                # Config management, asset registry, persistence
+├── import_cli.py            # CLI tool: ploomberg-import <file.csv> [--replace]
 ├── messages.py              # Custom Textual messages (PriceUpdate, AssetAdded, etc.)
+├── stash.py                 # Silver stash data model, persistence (~/.config/ploomberg/stash.json), CSV import
 ├── themes.py                # 5 built-in theme dataclasses (catppuccin-mocha, bloomberg, solarized, gruvbox, nord)
 ├── providers/
 │   ├── base.py              # AssetPrice dataclass + PriceProvider ABC
@@ -30,6 +32,7 @@ ploomberg/
 │   ├── dashboard_view.py    # F1 — main ticker dashboard
 │   ├── converter_view.py    # F2 — currency/commodity converter
 │   ├── chart_view.py        # F3 — historical price charts with interactive cursor
+│   ├── stash_view.py        # F4 — silver stash tracker (holdings, DCA, hypothetical calc)
 │   ├── editor_view.py       # F5 — add/remove dashboard assets
 │   └── theme_view.py        # F7 — theme picker with live preview
 └── widgets/
@@ -39,6 +42,7 @@ ploomberg/
     ├── command_hints.py     # Bottom MC-style key hints (docked)
     ├── converter_form.py    # Amount/From/To inputs with live calculation
     ├── price_chart.py       # PlotextPlot wrapper with cursor line support
+    ├── stash_table.py       # Silver stash display: summary, hypothetical calc, purchase log
     └── theme_preview.py     # Sample rows showing theme colors
 ```
 
@@ -76,6 +80,7 @@ ploomberg/
 - Persisted at `~/.config/ploomberg/config.json`
 - Fields: `watchlist` (list of asset IDs), `theme` (theme ID string), `refresh_interval` (seconds)
 - Asset registry in `config.py` `AVAILABLE_ASSETS` dict maps asset IDs to provider/symbol/name
+- Stash data persisted at `~/.config/ploomberg/stash.json` (purchase records for silver tracker)
 
 ## Key Bindings
 | Key | Action |
@@ -83,6 +88,7 @@ ploomberg/
 | F1 | Dashboard (default) |
 | F2 | Converter |
 | F3 | Chart |
+| F4 | Silver Stash |
 | F5 | Dashboard Editor |
 | F7 | Theme Editor |
 | Q | Quit |
@@ -114,7 +120,7 @@ ploomberg/
 - **Phase 1** (DONE): Dashboard ticker + Converter
 - **Phase 1.5** (DONE): Theme Editor with 5 built-in themes
 - **Phase 2** (DONE): Historical price charts (F3) with interactive cursor + detail panel
-- **Phase 3** (TODO): Watchlists (F4)
+- **Phase 3** (DONE): Silver Stash tracker (F4) — holdings summary, DCA log, hypothetical calculator, CSV import
 - **Phase 4** (TODO): Detail window — select an asset to view extended info (unit, exchange, provider, description, etc.)
 
 ## Gotchas & Lessons Learned

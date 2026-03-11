@@ -12,3 +12,4 @@ dependencies = [
 
 [project.scripts]
 ploomberg = "ploomberg.__main__:main"
+ploomberg-import = "ploomberg.import_cli:main"

@@ -109,7 +109,7 @@ class DashboardView(Screen):
         yield StatusBar()
         yield CommandHints(
             "[bold]R[/] Refresh  [bold]F2[/] Convert  [bold]F3[/] Chart  "
-            "[bold]F5[/] Edit  [bold]F7[/] Theme  [bold]Q[/] Quit"
+            "[bold]F4[/] Stash  [bold]F5[/] Edit  [bold]F7[/] Theme  [bold]Q[/] Quit"
         )
 
     def action_force_refresh(self) -> None:
