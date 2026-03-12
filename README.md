@@ -1,6 +1,8 @@
 # Ploomberg v0.67
 
-A Bloomberg Terminal-inspired commodity and currency tracker for your command line. Built with Python and [Textual](https://textual.textualize.io/).
+"Oh my Gods, what's he gone and done *this* time?"
+
+I have for you a Bloomberg Terminal-inspired commodity and currency tracker for your command line. It's built with Python and [Textual](https://textual.textualize.io/).
 
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -66,4 +68,16 @@ See [MANUAL.md](MANUAL.md) for the full reference.
 
 ## License
 
-Personal project. Not financial advice. Don't blame us if you paper-trade your way to imaginary bankruptcy.
+GNU GPL v3, with an additional caveat:
+
+*This is not financial advice.*
+
+Again:
+
+THIS IS NOT FINANCIAL ADVICE.
+
+The stock market is a legalized casino backed by the full faith and credit of the government.
+
+Don't blame us if you paper-trade your way to imaginary bankruptcy.
+
+*Definitely* don't blame us if you use any information you gleaned from this app to real-life-trade your way into real-life-bankruptcy.
