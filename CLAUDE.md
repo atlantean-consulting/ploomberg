@@ -19,6 +19,7 @@ ploomberg/
 ├── config.py                # Config management, asset registry, persistence
 ├── import_cli.py            # CLI tool: ploomberg-import <file.csv> [--replace]
 ├── messages.py              # Custom Textual messages (PriceUpdate, AssetAdded, etc.)
+├── paper_trading.py         # Paper trading data model, persistence (~/.config/ploomberg/paper_trading.json)
 ├── stash.py                 # Silver stash data model, persistence (~/.config/ploomberg/stash.json), CSV import
 ├── themes.py                # 5 built-in theme dataclasses (catppuccin-mocha, bloomberg, solarized, gruvbox, nord)
 ├── providers/
@@ -33,6 +34,7 @@ ploomberg/
 │   ├── converter_view.py    # F2 — currency/commodity converter
 │   ├── chart_view.py        # F3 — historical price charts with interactive cursor
 │   ├── stash_view.py        # F4 — silver stash tracker (holdings, DCA, hypothetical calc)
+│   ├── trading_view.py      # F6 — paper trading simulator (buy/sell, portfolio, P&L)
 │   ├── editor_view.py       # F5 — add/remove dashboard assets
 │   └── theme_view.py        # F7 — theme picker with live preview
 └── widgets/
@@ -43,6 +45,7 @@ ploomberg/
     ├── converter_form.py    # Amount/From/To inputs with live calculation
     ├── price_chart.py       # PlotextPlot wrapper with cursor line support
     ├── stash_table.py       # Silver stash display: summary, hypothetical calc, purchase log
+    ├── trading_panel.py     # Paper trading display: portfolio summary, positions, trade form, history
     └── theme_preview.py     # Sample rows showing theme colors
 ```
 
@@ -80,7 +83,9 @@ ploomberg/
 - Persisted at `~/.config/ploomberg/config.json`
 - Fields: `watchlist` (list of asset IDs), `theme` (theme ID string), `refresh_interval` (seconds)
 - Asset registry in `config.py` `AVAILABLE_ASSETS` dict maps asset IDs to provider/symbol/name
+- Watchlist supports `"---"` sentinel entries as visual separators (rendered as horizontal rules in ticker table)
 - Stash data persisted at `~/.config/ploomberg/stash.json` (purchase records for silver tracker)
+- Paper trading data persisted at `~/.config/ploomberg/paper_trading.json` (portfolio cash, trade history)
 
 ## Key Bindings
 | Key | Action |
@@ -89,10 +94,18 @@ ploomberg/
 | F2 | Converter |
 | F3 | Chart |
 | F4 | Silver Stash |
+| F6 | Paper Trading |
 | F5 | Dashboard Editor |
 | F7 | Theme Editor |
 | Q | Quit |
+| R | Force refresh (in Dashboard) |
+| P | Toggle 24H change %/$ (in Dashboard) |
 | Space/Enter | Toggle asset (in Editor) |
+| PgUp/PgDn | Reorder asset (in Editor) |
+| H | Hide/unhide asset (in Editor) |
+| D | Delete asset (in Editor) |
+| A | Add asset (in Editor) |
+| S | Insert separator (in Editor) |
 | Enter | Apply theme (in Theme Editor) |
 | Left/Right | Move cursor across chart (in Chart) |
 | PgUp/PgDn | Jump cursor 10% (in Chart) |
@@ -101,6 +114,9 @@ ploomberg/
 | Up/Down | Cycle assets (in Chart) |
 | +/- | Change period (in Chart) |
 | 1-6 | Jump to period 1D/5D/1M/3M/6M/1Y (in Chart) |
+| F9 | Buy (in Paper Trading) |
+| F10 | Sell (in Paper Trading) |
+| F12 | Reset portfolio (in Paper Trading) |
 
 ## Dependencies
 - `textual>=0.47.0` (installed: 8.0.0)
@@ -114,6 +130,7 @@ ploomberg/
 - Command hints are MC-style: `[bold]Key[/] Action` separated by double-space
 - Catppuccin Mocha is the default theme; CSS uses Textual design variables ($success, $error, $warning, etc.)
 - Ticker arrows: green ▲ positive, red ▼ negative, yellow ─ flat
+- Ticker 24H change column toggles between % and $ via `P` key
 - The reference project LINAMP is at `./linamp-exmaple/` (note: directory name has a typo, keep it as-is)
 
 ## Roadmap
@@ -121,7 +138,8 @@ ploomberg/
 - **Phase 1.5** (DONE): Theme Editor with 5 built-in themes
 - **Phase 2** (DONE): Historical price charts (F3) with interactive cursor + detail panel
 - **Phase 3** (DONE): Silver Stash tracker (F4) — holdings summary, DCA log, hypothetical calculator, CSV import
-- **Phase 4** (TODO): Detail window — select an asset to view extended info (unit, exchange, provider, description, etc.)
+- **Phase 4** (DONE): Paper Trading simulator (F6) — virtual $10k cash, buy/sell at market prices, portfolio tracking, P&L, trade history
+- **Phase 5** (TODO): Detail window — select an asset to view extended info (unit, exchange, provider, description, etc.)
 
 ## Gotchas & Lessons Learned
 1. Frankfurter API is at `.app` not `.dev`, and uses `from`/`to` not `base`/`symbols`
@@ -132,3 +150,6 @@ ploomberg/
 6. `_broadcast_prices()` must post to `self.screen` (the Screen object), not iterate `walk_children()` — the Screen has the `on_price_update` handler, child widgets do not
 7. yfinance is synchronous — wrap calls in `asyncio.to_thread()` to avoid blocking the event loop
 8. Metals config symbols (XAU, XAG) differ from yfinance tickers (GC=F, SI=F) — history fetcher must use `METAL_TICKERS` mapping, not raw config symbol
+9. Textual `Input` widget requires `height: 3` (border + content + border) — `height: 1` renders the widget but leaves 0 content height, making it impossible to type
+10. Don't use single-letter or `ctrl+` keybindings on screens that contain `Input` widgets — Input consumes printable chars and uses many ctrl combos (ctrl+a/e/d/w/u/f/k/x/c/v). Use function keys (F9, F10, etc.) instead
+11. When building aligned columns with Rich markup (color tags), format the entire line as plain text first for correct Python alignment, then surgically inject `[color]...[/color]` around the target substring — f-string alignment counts markup characters as width

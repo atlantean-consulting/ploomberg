@@ -27,7 +27,7 @@ class StashView(Screen):
         yield StatusBar()
         yield CommandHints(
             "[bold]F1[/] Dashboard  [bold]F2[/] Convert  [bold]F3[/] Chart  "
-            "[bold]F5[/] Edit  [bold]F7[/] Theme  [bold]Q[/] Quit"
+            "[bold]F6[/] Trade  [bold]F5[/] Edit  [bold]F7[/] Theme  [bold]Q[/] Quit"
         )
 
     def on_price_update(self, event: PriceUpdate) -> None:

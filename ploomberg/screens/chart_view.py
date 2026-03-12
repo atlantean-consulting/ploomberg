@@ -202,7 +202,7 @@ class ChartView(Screen):
         return wl[self._asset_idx]
 
     def compose(self) -> ComposeResult:
-        yield HeaderBar("P L O O M B E R G  v0.1")
+        yield HeaderBar("P L O O M B E R G  v0.67")
         yield PeriodBar()
         with Horizontal(id="chart-body"):
             yield PriceChart(id="chart")

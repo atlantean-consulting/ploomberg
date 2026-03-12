@@ -7,7 +7,7 @@ from textual.widgets import Static
 from textual.app import ComposeResult
 
 from ploomberg.providers.base import AssetPrice
-from ploomberg.config import AVAILABLE_ASSETS
+from ploomberg.config import AVAILABLE_ASSETS, SEPARATOR
 
 
 class TickerTable(Container):
@@ -36,6 +36,22 @@ class TickerTable(Container):
         super().__init__(**kwargs)
         self._watchlist = watchlist or []
         self._prices: dict[str, AssetPrice] = {}
+        self._show_pct: bool = True
+
+    def toggle_change_mode(self) -> None:
+        """Toggle between percentage and dollar change display."""
+        self._show_pct = not self._show_pct
+        self._update_header()
+        if self._prices:
+            self.update_prices(self._prices)
+
+    def _update_header(self) -> None:
+        col_label = "24H CHG" if self._show_pct else "24H CHG $"
+        try:
+            header = self.query_one(".ticker-header", Static)
+            header.update(f"  ASSET          PRICE (USD)        {col_label:<12}")
+        except Exception:
+            pass
 
     def compose(self) -> ComposeResult:
         yield Static(
@@ -43,14 +59,21 @@ class TickerTable(Container):
             classes="ticker-header",
         )
         yield Static("  " + "─" * 46, classes="ticker-separator")
+        sep_count = 0
         for asset_id in self._watchlist:
-            info = AVAILABLE_ASSETS.get(asset_id, {})
-            name = info.get("name", asset_id)
-            yield Static(f"  ─ {name:<14} {'---':>14}     {'---':>8}", id=f"row-{asset_id}", classes="ticker-row")
+            if asset_id == SEPARATOR:
+                yield Static("  " + "─" * 46, id=f"sep-{sep_count}", classes="ticker-separator")
+                sep_count += 1
+            else:
+                info = AVAILABLE_ASSETS.get(asset_id, {})
+                name = info.get("name", asset_id)
+                yield Static(f"  ─ {name:<14} {'---':>14}     {'---':>8}", id=f"row-{asset_id}", classes="ticker-row")
 
     def update_prices(self, prices: dict[str, AssetPrice]) -> None:
         self._prices = prices
         for asset_id in self._watchlist:
+            if asset_id == SEPARATOR:
+                continue
             try:
                 row = self.query_one(f"#row-{asset_id}", Static)
             except Exception:
@@ -58,16 +81,31 @@ class TickerTable(Container):
 
             if asset_id in prices:
                 p = prices[asset_id]
-                # Direction indicator
+
+                # Direction indicator and color
                 if p.change_pct > 0:
                     arrow = "[green]▲[/green]"
-                    change_str = f"[green]+{p.change_pct:.2f}%[/green]"
+                    color = "green"
                 elif p.change_pct < 0:
                     arrow = "[red]▼[/red]"
-                    change_str = f"[red]{p.change_pct:.2f}%[/red]"
+                    color = "red"
                 else:
                     arrow = "[yellow]─[/yellow]"
-                    change_str = f"[yellow]{p.change_pct:.2f}%[/yellow]"
+                    color = "yellow"
+
+                # Format change value
+                if self._show_pct:
+                    sign = "+" if p.change_pct > 0 else ""
+                    change_plain = f"{sign}{p.change_pct:.2f}%"
+                else:
+                    # Compute dollar change from pct
+                    if abs(p.change_pct) > 1e-9:
+                        prev = p.price / (1 + p.change_pct / 100)
+                        change_dollar = p.price - prev
+                    else:
+                        change_dollar = 0.0
+                    sign = "+" if change_dollar > 0 else ""
+                    change_plain = f"{sign}${change_dollar:,.2f}"
 
                 # Format price
                 if p.price >= 1000:
@@ -77,9 +115,11 @@ class TickerTable(Container):
                 else:
                     price_str = f"${p.price:.6f}"
 
-                row.update(
-                    f"  {arrow} {p.name:<14} {price_str:>14}     {change_str:>8}"
-                )
+                # Build plain line then inject color markup
+                rest = f" {p.name:<14} {price_str:>14}     {change_plain:>8}"
+                chg_start = rest.rfind(change_plain)
+                line = f"  {arrow}{rest[:chg_start]}[{color}]{change_plain}[/{color}]"
+                row.update(line)
             else:
                 info = AVAILABLE_ASSETS.get(asset_id, {})
                 name = info.get("name", asset_id)
@@ -96,16 +136,23 @@ class TickerTable(Container):
             )
         )
         await self.mount(Static("  " + "─" * 46, classes="ticker-separator"))
+        sep_count = 0
         for asset_id in watchlist:
-            info = AVAILABLE_ASSETS.get(asset_id, {})
-            name = info.get("name", asset_id)
-            await self.mount(
-                Static(
-                    f"  ─ {name:<14} {'---':>14}     {'---':>8}",
-                    id=f"row-{asset_id}",
-                    classes="ticker-row",
+            if asset_id == SEPARATOR:
+                await self.mount(
+                    Static("  " + "─" * 46, id=f"sep-{sep_count}", classes="ticker-separator")
                 )
-            )
+                sep_count += 1
+            else:
+                info = AVAILABLE_ASSETS.get(asset_id, {})
+                name = info.get("name", asset_id)
+                await self.mount(
+                    Static(
+                        f"  ─ {name:<14} {'---':>14}     {'---':>8}",
+                        id=f"row-{asset_id}",
+                        classes="ticker-row",
+                    )
+                )
         # Re-apply any existing prices
         if self._prices:
             self.update_prices(self._prices)

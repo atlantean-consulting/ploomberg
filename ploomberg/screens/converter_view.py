@@ -23,7 +23,7 @@ class ConverterView(Screen):
         yield HeaderBar("C O N V E R T E R")
         yield ConverterForm()
         yield StatusBar()
-        yield CommandHints("[bold]F1[/] Dashboard  [bold]F5[/] Edit  [bold]F7[/] Theme  [bold]Q[/] Quit")
+        yield CommandHints("[bold]F1[/] Dashboard  [bold]F6[/] Trade  [bold]F5[/] Edit  [bold]F7[/] Theme  [bold]Q[/] Quit")
 
     def on_price_update(self, event: PriceUpdate) -> None:
         self.query_one(ConverterForm).update_prices(event.prices)

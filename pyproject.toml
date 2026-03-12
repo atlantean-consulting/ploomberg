@@ -1,6 +1,6 @@
 [project]
 name = "ploomberg"
-version = "0.1.0"
+version = "0.67.0"
 description = "Bloomberg Terminal-inspired commodity & currency tracker"
 requires-python = ">=3.10"
 dependencies = [

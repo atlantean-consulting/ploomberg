@@ -24,6 +24,9 @@ AVAILABLE_ASSETS: dict[str, dict] = {
 
 DEFAULT_WATCHLIST = ["XAU", "XAG", "XCU", "NI", "ZN", "CL", "NG", "EUR", "BTC"]
 
+# Special watchlist entry that renders as a visual separator line
+SEPARATOR = "---"
+
 
 @dataclass
 class PloombergConfig:

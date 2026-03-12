@@ -90,6 +90,7 @@ class DashboardView(Screen):
 
     BINDINGS = [
         Binding("r", "force_refresh", "Refresh", priority=True),
+        Binding("p", "toggle_change", "Toggle %/$", priority=True),
     ]
 
     def __init__(self, **kwargs) -> None:
@@ -103,14 +104,17 @@ class DashboardView(Screen):
         return [a for a in self.app.config.watchlist if a not in hidden]
 
     def compose(self) -> ComposeResult:
-        yield HeaderBar("P L O O M B E R G  v0.1")
+        yield HeaderBar("P L O O M B E R G  v0.67")
         yield TickerTable(watchlist=self._visible_watchlist())
         yield TiltOverlay()
         yield StatusBar()
         yield CommandHints(
-            "[bold]R[/] Refresh  [bold]F2[/] Convert  [bold]F3[/] Chart  "
-            "[bold]F4[/] Stash  [bold]F5[/] Edit  [bold]F7[/] Theme  [bold]Q[/] Quit"
+            "[bold]R[/] Refresh  [bold]P[/] %/$  [bold]F2[/] Convert  [bold]F3[/] Chart  "
+            "[bold]F4[/] Stash  [bold]F6[/] Trade  [bold]F5[/] Edit  [bold]F7[/] Theme  [bold]Q[/] Quit"
         )
+
+    def action_toggle_change(self) -> None:
+        self.query_one(TickerTable).toggle_change_mode()
 
     def action_force_refresh(self) -> None:
         now = time.monotonic()

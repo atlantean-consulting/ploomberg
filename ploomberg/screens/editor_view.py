@@ -9,7 +9,7 @@ from textual.binding import Binding
 
 from ploomberg.widgets.header_bar import HeaderBar
 from ploomberg.widgets.command_hints import CommandHints
-from ploomberg.config import AVAILABLE_ASSETS, save_config
+from ploomberg.config import AVAILABLE_ASSETS, SEPARATOR, save_config
 
 
 class EditorView(Screen):
@@ -33,6 +33,7 @@ class EditorView(Screen):
         Binding("h", "toggle_hidden", "Hide", priority=True),
         Binding("d", "delete_asset", "Delete", priority=True),
         Binding("a", "add_asset", "Add", priority=True),
+        Binding("s", "add_separator", "Separator", priority=True),
     ]
 
     def compose(self) -> ComposeResult:
@@ -40,7 +41,7 @@ class EditorView(Screen):
         yield ListView(*self._build_items())
         yield CommandHints(
             "[bold]PgUp/PgDn[/] Reorder  [bold]H[/] Hide  "
-            "[bold]D[/] Delete  [bold]A[/] Add  "
+            "[bold]D[/] Delete  [bold]A[/] Add  [bold]S[/] Separator  "
             "[bold]F1[/] Dashboard  [bold]Q[/] Quit"
         )
 
@@ -48,21 +49,27 @@ class EditorView(Screen):
         watchlist = self.app.config.watchlist
         hidden = self.app.config.hidden_assets
         items = []
+        sep_count = 0
         for asset_id in watchlist:
-            info = AVAILABLE_ASSETS.get(asset_id, {})
-            name = info.get("name", asset_id)
-            exchange = info.get("exchange", "")
-            exchange_tag = f" [{exchange}]" if exchange else ""
-            is_hidden = asset_id in hidden
-            if is_hidden:
-                text = f" [dim]▸ {name} ({asset_id}){exchange_tag} (hidden)[/dim]"
+            if asset_id == SEPARATOR:
+                label = Label(" [dim]──────────── separator ────────────[/dim]")
+                items.append(ListItem(label, id=f"editor-sep-{sep_count}"))
+                sep_count += 1
             else:
-                text = f" ▸ {name} ({asset_id}){exchange_tag}"
-            label = Label(text)
-            item = ListItem(label, id=f"editor-{asset_id}")
-            if is_hidden:
-                item.add_class("hidden-item")
-            items.append(item)
+                info = AVAILABLE_ASSETS.get(asset_id, {})
+                name = info.get("name", asset_id)
+                exchange = info.get("exchange", "")
+                exchange_tag = f" [{exchange}]" if exchange else ""
+                is_hidden = asset_id in hidden
+                if is_hidden:
+                    text = f" [dim]▸ {name} ({asset_id}){exchange_tag} (hidden)[/dim]"
+                else:
+                    text = f" ▸ {name} ({asset_id}){exchange_tag}"
+                label = Label(text)
+                item = ListItem(label, id=f"editor-{asset_id}")
+                if is_hidden:
+                    item.add_class("hidden-item")
+                items.append(item)
         return items
 
     def _get_selected_index(self) -> int | None:
@@ -102,6 +109,8 @@ class EditorView(Screen):
         if idx is None:
             return
         asset_id = self.app.config.watchlist[idx]
+        if asset_id == SEPARATOR:
+            return
         hidden = self.app.config.hidden_assets
         if asset_id in hidden:
             hidden.remove(asset_id)
@@ -120,6 +129,15 @@ class EditorView(Screen):
             self.app.config.hidden_assets.remove(asset_id)
         save_config(self.app.config)
         await self._refresh_list()
+
+    async def action_add_separator(self) -> None:
+        """Insert a separator line below the current selection."""
+        idx = self._get_selected_index()
+        insert_at = (idx + 1) if idx is not None else len(self.app.config.watchlist)
+        self.app.config.watchlist.insert(insert_at, SEPARATOR)
+        save_config(self.app.config)
+        await self._refresh_list()
+        self.query_one(ListView).index = insert_at
 
     def action_add_asset(self) -> None:
         from ploomberg.screens.add_asset_screen import AddAssetScreen
